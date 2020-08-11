@@ -177,12 +177,12 @@ void loop() {
   for (int i = 1; i <= 14; i++) {
     u8f.setForegroundColor(channel_color[i - 1]);
     if (ap_count[i - 1] > 0) {
-      String toPrint = "[" + (String)ap_count[i - 1] + "]";
-      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?9:12), GRAPH_BASELINE + 17, toPrint.c_str());
+      String toPrint = "." + (String)ap_count[i - 1] + ".";
+      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?7:16), GRAPH_BASELINE + 15, toPrint.c_str());
     }
   }
 }
 
   // Wait a bit before scanning again
-  delay(2000);
+  delay(3000);
 }
