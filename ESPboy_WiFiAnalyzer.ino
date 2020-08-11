@@ -101,9 +101,9 @@ void setup(){
 
 
 void loop() {
-  static uint8_t ap_count[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  static int32_t max_rssi[] = {-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100};
-  static String toPrint;
+  uint8_t ap_count[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int32_t max_rssi[] = {-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100};
+  String toPrint;
   
   u8f.setForegroundColor(TFT_WHITE);
   u8f.drawStr(32, 28, "Scaning WiFi...");
@@ -114,42 +114,20 @@ void loop() {
   if (n == 0) {
     u8f.setForegroundColor(TFT_RED);
     u8f.drawStr(24, 35, "No networks found");
-  } else {
+  } 
+  else {
 
-  // print WiFi stat
   toPrint = "WiFi found: " + (String)n;
   u8f.setForegroundColor(TFT_ORANGE);
   u8f.drawStr(0, 8, toPrint.c_str());
-  toPrint = "\nRecom.ch: ";
-  bool listed_first_channel = false;
-  for (int i = 1; i <= 11; i++) { // channels 12-14 may not available
-    if ((i == 1) || (max_rssi[i - 2] < NEAR_CHANNEL_RSSI_ALLOW)) { // check previous channel signal strengh
-      if ((i == sizeof(channel_color)) || (max_rssi[i] < NEAR_CHANNEL_RSSI_ALLOW)) { // check next channel signal strengh
-        if (ap_count[i - 1] == 0) { // check no AP exists in same channel
-          if (!listed_first_channel) {
-            listed_first_channel = true;
-          } else {
-            toPrint+="/";
-          }
-          toPrint+=(String)i;
-        }
-      }
-    }
-  }
-  u8f.setForegroundColor(TFT_GREEN);
-  u8f.drawStr(0, 16, toPrint.c_str());
+
 
   // draw graph base axle
   tft.drawFastHLine(0, GRAPH_BASELINE, 320, TFT_WHITE);
   for (int i = 1; i <= 14; i++) {
     u8f.setForegroundColor(channel_color[i - 1]);
     u8f.drawStr((i * CHANNEL_WIDTH) - ((i < 10)?3:6), GRAPH_BASELINE + 8, ((String)i).c_str());
-    if (ap_count[i - 1] > 0) {
-      String toPrint = "[" + (String)ap_count[i - 1] + "]";
-      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?9:12), GRAPH_BASELINE + 17, toPrint.c_str());
-    }
   }
-
 
    // plot found WiFi info
     for (int i = 0; i < n; i++) {
@@ -170,9 +148,40 @@ void loop() {
       // Print SSID, signal strengh and if not encrypted
       u8f.setForegroundColor(color);
       u8f.drawStr((channel - 1) * CHANNEL_WIDTH, GRAPH_BASELINE - 10 - height, WiFi.SSID(i).c_str());
-      delay(300);
+      delay(200);
+    } 
+
+  
+  
+  // print WiFi stat
+  toPrint = "\nRecom.ch: ";
+  bool listed_first_channel = false;
+  for (int i = 1; i <= 11; i++) { // channels 12-14 may not available
+    if ((i == 1) || (max_rssi[i - 2] < NEAR_CHANNEL_RSSI_ALLOW)) { // check previous channel signal strengh
+      if ((i == sizeof(channel_color)) || (max_rssi[i] < NEAR_CHANNEL_RSSI_ALLOW)) { // check next channel signal strengh
+        if (ap_count[i - 1] == 0) { // check no AP exists in same channel
+          if (!listed_first_channel) {
+            listed_first_channel = true;
+          } else {
+            toPrint+="/";
+          }
+          toPrint+=(String)i;
+        }
+      }
     }
   }
+  u8f.setForegroundColor(TFT_GREEN);
+  u8f.drawStr(0, 16, toPrint.c_str());
+
+  // draw graph base axle
+  for (int i = 1; i <= 14; i++) {
+    u8f.setForegroundColor(channel_color[i - 1]);
+    if (ap_count[i - 1] > 0) {
+      String toPrint = "[" + (String)ap_count[i - 1] + "]";
+      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?9:12), GRAPH_BASELINE + 17, toPrint.c_str());
+    }
+  }
+}
 
   // Wait a bit before scanning again
   delay(2000);
