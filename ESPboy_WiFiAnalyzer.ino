@@ -26,10 +26,9 @@
 
 #define WIDTH 128
 #define HEIGHT 128
-#define BANNER_HEIGHT 8
 #define GRAPH_BASELINE (HEIGHT - 18)
 #define GRAPH_HEIGHT (HEIGHT - 52)
-#define CHANNEL_WIDTH (WIDTH / 16)
+#define CHANNEL_WIDTH (WIDTH / 15)
 
 // RSSI RANGE
 #define RSSI_CEILING -40
@@ -126,7 +125,7 @@ void loop() {
   tft.drawFastHLine(0, GRAPH_BASELINE, 320, TFT_WHITE);
   for (int i = 1; i <= 14; i++) {
     u8f.setForegroundColor(channel_color[i - 1]);
-    u8f.drawStr((i * CHANNEL_WIDTH) - ((i < 10)?3:6), GRAPH_BASELINE + 8, ((String)i).c_str());
+    u8f.drawStr((i * CHANNEL_WIDTH) - ((i < 10)?1:3), GRAPH_BASELINE + 8, ((String)i).c_str());
   }
 
    // plot found WiFi info
@@ -178,7 +177,7 @@ void loop() {
     u8f.setForegroundColor(channel_color[i - 1]);
     if (ap_count[i - 1] > 0) {
       String toPrint = "." + (String)ap_count[i - 1] + ".";
-      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?7:16), GRAPH_BASELINE + 15, toPrint.c_str());
+      u8f.drawStr((i * CHANNEL_WIDTH) - ((ap_count[i - 1] < 10)?5:10), GRAPH_BASELINE + 15, toPrint.c_str());
     }
   }
 }
