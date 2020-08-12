@@ -105,7 +105,7 @@ void loop() {
   String toPrint;
   
   u8f.setForegroundColor(TFT_WHITE);
-  u8f.drawStr(32, 28, "Scaning WiFi...");
+  u8f.drawStr(30, 28, "Scanning WiFi...");
   int n = WiFi.scanNetworks();
   
   tft.fillScreen(TFT_BLACK);
