@@ -8,6 +8,7 @@
 #include <TFT_eSPI.h>
 #include "U8g2_for_TFT_eSPI.h"
 #include "lib/ESPboyLogo.h"
+#include "ESPboyOTA.h"
 
 #define PAD_LEFT        0x01
 #define PAD_UP          0x02
@@ -38,6 +39,7 @@
 Adafruit_MCP23017 mcp;
 U8g2_for_TFT_eSPI u8f;
 TFT_eSPI tft = TFT_eSPI();
+ESPboyOTA* OTAobj = NULL;
 
 // Channel color mapping from channel 1 to 14
 uint16_t channel_color[] = {
@@ -47,6 +49,8 @@ uint16_t channel_color[] = {
 };
 
 uint8_t scan_count = 0;
+
+uint8_t getKeys() { return (~mcp.readGPIOAB() & 255); }
 
 void setup(){
   Serial.begin(115200);
@@ -88,9 +92,11 @@ void setup(){
   tft.drawString(F("WiFi analyzer"), 26, 95);
 
   delay(1000);
-
+  
   // clear screen
   tft.fillScreen(TFT_BLACK);
+
+  if (getKeys()&PAD_ACT || getKeys()&PAD_ESC) OTAobj = new ESPboyOTA(&tft, &mcp);
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -103,7 +109,8 @@ void loop() {
   uint8_t ap_count[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   int32_t max_rssi[] = {-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100};
   String toPrint;
-  
+
+  tone(SOUNDPIN, 200, 100);
   u8f.setForegroundColor(TFT_WHITE);
   u8f.drawStr(30, 28, "Scanning WiFi...");
   int n = WiFi.scanNetworks();
