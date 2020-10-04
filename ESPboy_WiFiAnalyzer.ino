@@ -4,6 +4,7 @@
  */
 
 #include <Adafruit_MCP23017.h> 
+#include <Adafruit_MCP4725.h>  
 #include "ESP8266WiFi.h"
 #include <TFT_eSPI.h>
 #include "U8g2_for_TFT_eSPI.h"
@@ -20,10 +21,12 @@
 #define PAD_RGT         0x80
 #define PAD_ANY         0xff
 
-#define MCP23017address 0  
-#define LEDPIN D4
-#define SOUNDPIN D3
-#define CSTFTPIN 8  // CS MCP23017 PIN to TFT
+#define MCP23017address 0 
+#define MCP4725address  0x60 
+#define LEDPIN          D4
+#define SOUNDPIN        D3
+#define LEDLOCK         9
+#define CSTFTPIN        8  // CS MCP23017 PIN to TFT
 
 #define WIDTH 128
 #define HEIGHT 128
@@ -36,6 +39,7 @@
 #define RSSI_FLOOR -100
 #define NEAR_CHANNEL_RSSI_ALLOW -70
 
+Adafruit_MCP4725 dac;
 Adafruit_MCP23017 mcp;
 U8g2_for_TFT_eSPI u8f;
 TFT_eSPI tft = TFT_eSPI();
@@ -54,6 +58,11 @@ uint8_t getKeys() { return (~mcp.readGPIOAB() & 255); }
 
 void setup(){
   Serial.begin(115200);
+
+//DAC init and backlit off
+  dac.begin(MCP4725address);
+  delay (100);
+  dac.setVoltage(0, false);
 
 //MCP23017 init
   mcp.begin(MCP23017address);
@@ -88,20 +97,26 @@ void setup(){
   
   // draw ESPboylogo
   tft.drawXBitmap(30, 20, ESPboyLogo, 68, 64, TFT_YELLOW);
+  tft.setTextSize(1);
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
   tft.drawString(F("WiFi analyzer"), 26, 95);
 
-  delay(1000);
-  
-  // clear screen
+//LCD backlit fading on
+  for (uint16_t bcklt=0; bcklt<4095; bcklt+=20){
+    dac.setVoltage(bcklt, false);
+    delay(10);}
+
+//clear TFT and backlit on high
+  dac.setVoltage(4095, false);
   tft.fillScreen(TFT_BLACK);
 
+//OTA init
   if (getKeys()&PAD_ACT || getKeys()&PAD_ESC) OTAobj = new ESPboyOTA(&tft, &mcp);
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
 
-  delay(1000);
+  delay(500);
 }
 
 
