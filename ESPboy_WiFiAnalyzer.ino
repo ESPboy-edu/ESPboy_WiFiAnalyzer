@@ -9,7 +9,6 @@
 #include <TFT_eSPI.h>
 #include "U8g2_for_TFT_eSPI.h"
 #include "lib/ESPboyLogo.h"
-#include "ESPboyOTA.h"
 
 #define PAD_LEFT        0x01
 #define PAD_UP          0x02
@@ -43,7 +42,7 @@ Adafruit_MCP4725 dac;
 Adafruit_MCP23017 mcp;
 U8g2_for_TFT_eSPI u8f;
 TFT_eSPI tft = TFT_eSPI();
-ESPboyOTA* OTAobj = NULL;
+
 
 // Channel color mapping from channel 1 to 14
 uint16_t channel_color[] = {
@@ -67,7 +66,6 @@ void setup(){
 //MCP23017 init
   mcp.begin(MCP23017address);
   delay(100);
-  mcp.pinMode(CSTFTPIN, OUTPUT);
   for (int i = 0; i < 8; ++i) {
     mcp.pinMode(i, INPUT);
     mcp.pullUp(i, HIGH);}
@@ -82,6 +80,7 @@ void setup(){
   noTone(SOUNDPIN);
 
 // TFT init
+  mcp.pinMode(CSTFTPIN, OUTPUT);
   mcp.digitalWrite(CSTFTPIN, LOW);
   tft.begin();
   delay(100);
@@ -109,9 +108,6 @@ void setup(){
 //clear TFT and backlit on high
   dac.setVoltage(4095, false);
   tft.fillScreen(TFT_BLACK);
-
-//OTA init
-  if (getKeys()&PAD_ACT || getKeys()&PAD_ESC) OTAobj = new ESPboyOTA(&tft, &mcp);
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
