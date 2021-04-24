@@ -3,29 +3,8 @@
  Revised from ESP8266WiFi WiFiScan example.
  */
 
-#include <Adafruit_MCP23017.h> 
-#include <Adafruit_MCP4725.h>  
-#include "ESP8266WiFi.h"
-#include <TFT_eSPI.h>
+#include "ESPboyInit.h"
 #include "U8g2_for_TFT_eSPI.h"
-#include "lib/ESPboyLogo.h"
-
-#define PAD_LEFT        0x01
-#define PAD_UP          0x02
-#define PAD_DOWN        0x04
-#define PAD_RIGHT       0x08
-#define PAD_ACT         0x10
-#define PAD_ESC         0x20
-#define PAD_LFT         0x40
-#define PAD_RGT         0x80
-#define PAD_ANY         0xff
-
-#define MCP23017address 0 
-#define MCP4725address  0x60 
-#define LEDPIN          D4
-#define SOUNDPIN        D3
-#define LEDLOCK         9
-#define CSTFTPIN        8  // CS MCP23017 PIN to TFT
 
 #define WIDTH 128
 #define HEIGHT 128
@@ -38,10 +17,8 @@
 #define RSSI_FLOOR -100
 #define NEAR_CHANNEL_RSSI_ALLOW -70
 
-Adafruit_MCP4725 dac;
-Adafruit_MCP23017 mcp;
+ESPboyInit myESPboy;
 U8g2_for_TFT_eSPI u8f;
-TFT_eSPI tft = TFT_eSPI();
 
 
 // Channel color mapping from channel 1 to 14
@@ -53,61 +30,17 @@ uint16_t channel_color[] = {
 
 uint8_t scan_count = 0;
 
-uint8_t getKeys() { return (~mcp.readGPIOAB() & 255); }
 
 void setup(){
-  Serial.begin(115200);
-
-//DAC init and backlit off
-  dac.begin(MCP4725address);
-  delay (100);
-  dac.setVoltage(0, false);
-
-//MCP23017 init
-  mcp.begin(MCP23017address);
-  delay(100);
-  for (int i = 0; i < 8; ++i) {
-    mcp.pinMode(i, INPUT);
-    mcp.pullUp(i, HIGH);}
+  //Init ESPboy
+  myESPboy.begin(((String)F("WiFi analyzer")).c_str());
   
-  
-// Sound init and test
-  pinMode(SOUNDPIN, OUTPUT);
-  tone(SOUNDPIN, 200, 100);
-  delay(100);
-  tone(SOUNDPIN, 100, 100);
-  delay(100);
-  noTone(SOUNDPIN);
-
-// TFT init
-  mcp.pinMode(CSTFTPIN, OUTPUT);
-  mcp.digitalWrite(CSTFTPIN, LOW);
-  tft.begin();
-  delay(100);
-  tft.setRotation(0);
-  tft.fillScreen(TFT_BLACK);
-
 //u8f init
-  u8f.begin(tft);
+  u8f.begin(myESPboy.tft);
   u8f.setFontMode(1);                 // use u8g2 none transparent mode
   u8f.setBackgroundColor(TFT_BLACK);
   u8f.setFontDirection(0);            // left to right
   u8f.setFont(u8g2_font_4x6_t_cyrillic); 
-  
-  // draw ESPboylogo
-  tft.drawXBitmap(30, 20, ESPboyLogo, 68, 64, TFT_YELLOW);
-  tft.setTextSize(1);
-  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-  tft.drawString(F("WiFi analyzer"), 26, 95);
-
-//LCD backlit fading on
-  for (uint16_t bcklt=0; bcklt<4095; bcklt+=20){
-    dac.setVoltage(bcklt, false);
-    delay(10);}
-
-//clear TFT and backlit on high
-  dac.setVoltage(4095, false);
-  tft.fillScreen(TFT_BLACK);
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -126,7 +59,7 @@ void loop() {
   u8f.drawStr(30, 28, "Scanning WiFi...");
   int n = WiFi.scanNetworks();
   
-  tft.fillScreen(TFT_BLACK);
+  myESPboy.tft.fillScreen(TFT_BLACK);
   
   if (n == 0) {
     u8f.setForegroundColor(TFT_RED);
@@ -140,7 +73,7 @@ void loop() {
 
 
   // draw graph base axle
-  tft.drawFastHLine(0, GRAPH_BASELINE, 320, TFT_WHITE);
+  myESPboy.tft.drawFastHLine(0, GRAPH_BASELINE, 320, TFT_WHITE);
   for (int i = 1; i <= 14; i++) {
     u8f.setForegroundColor(channel_color[i - 1]);
     u8f.drawStr((i * CHANNEL_WIDTH) - ((i < 10)?1:3), GRAPH_BASELINE + 8, ((String)i).c_str());
@@ -159,8 +92,8 @@ void loop() {
         max_rssi[channel - 1] = rssi;
       }
 
-      tft.drawLine(channel * CHANNEL_WIDTH, GRAPH_BASELINE - height, (channel - 1) * CHANNEL_WIDTH, GRAPH_BASELINE + 1, color);
-      tft.drawLine(channel * CHANNEL_WIDTH, GRAPH_BASELINE - height, (channel + 1) * CHANNEL_WIDTH, GRAPH_BASELINE + 1, color);
+      myESPboy.tft.drawLine(channel * CHANNEL_WIDTH, GRAPH_BASELINE - height, (channel - 1) * CHANNEL_WIDTH, GRAPH_BASELINE + 1, color);
+      myESPboy.tft.drawLine(channel * CHANNEL_WIDTH, GRAPH_BASELINE - height, (channel + 1) * CHANNEL_WIDTH, GRAPH_BASELINE + 1, color);
 
       // Print SSID, signal strengh and if not encrypted
       u8f.setForegroundColor(color);
